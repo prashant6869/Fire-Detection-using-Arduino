@@ -1,0 +1,124 @@
+/*Fire detection using Arduino*/
+/* components used
+ *  -Arduino Uno
+ *  -Flame sensor
+ *  -Buzzer
+ *  -LED
+ *  -GPS neo6
+ *  -GSM 800a
+ */
+
+
+#include <TinyGPS++.h>
+#include <SoftwareSerial.h>
+static const int RXPin = 4, TXPin = 3;
+SoftwareSerial mySerial(9, 10);
+const int buzzerPin = 11;
+const int flamePin = 2;
+int Flame = HIGH;
+TinyGPSPlus gps;
+SoftwareSerial ss(RXPin, TXPin);
+
+
+void setup()
+{
+  ss.begin(9600);
+  mySerial.begin(9600);
+
+  pinMode(buzzerPin, OUTPUT);
+
+  pinMode(flamePin, INPUT);
+
+  Serial.begin(9600);
+}
+void loop() {
+  Flame = digitalRead(flamePin);
+  delay(2000);
+  if (Flame == HIGH)
+  {
+    Serial.println("NO Fire is Detected");
+    digitalWrite(buzzerPin, LOW);
+
+
+
+  }
+  else
+  {
+    Serial.println("Fire is Detected");
+    digitalWrite(buzzerPin, HIGH);
+   
+        
+        calling();
+       
+      
+    delay(500);
+
+    
+    SendMessage();
+    
+    
+  }
+  }
+
+
+
+
+void SendMessage()
+{
+  Serial.println("sending message.....");
+  mySerial.println("AT+CMGF=1");
+  delay(1000);
+  mySerial.println("AT+CMGS=\"+919527920380\"\r");
+  delay(1000);
+
+
+
+  mySerial.println("FIRE IS DETECTED \n REACH AS SOON AS POSSIBLE \n ");
+  
+  mySerial.print("Latitude: ");
+  mySerial.print(gps.location.lat(),6);
+  mySerial.print("\n Longitude: ");
+  mySerial.println(gps.location.lng(),6);
+
+
+  mySerial.print("https://www.google.com/maps/@");
+  mySerial.print(gps.location.lat(),6);
+  mySerial.print(',');
+  mySerial.print(gps.location.lng(),6);
+  mySerial.print(",14z");
+
+
+
+  delay(100);
+  mySerial.println((char)26);
+  delay(1000);
+
+}
+
+void updateSerial()
+{
+  delay(500);
+  while (Serial.available())
+  {
+    mySerial.write(Serial.read());
+  }
+  while (mySerial.available())
+  {
+    Serial.write(mySerial.read());
+  }
+}
+
+void calling(){
+  Serial.println("calling........");
+    delay(500);
+
+    mySerial.println("AT");
+    updateSerial();
+
+    mySerial.println("ATD+ +919527920380;");
+    updateSerial();
+    delay(10000);
+    mySerial.println("ATH"); 
+    updateSerial();
+
+  }
